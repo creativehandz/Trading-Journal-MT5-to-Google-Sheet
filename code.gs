@@ -30,11 +30,70 @@ function doPost(e) {
         "Broker",
         "Account Name",
         "Account Number",
-        "Position ID"
+        "Position ID",
+        "Team",
+        "Risk:Reward",
+        "Result"
       ]);
     }
 
     const data = JSON.parse(e.postData.contents);
+
+    // Determine team member based on lot size
+    function getTeamMember(lots) {
+      const lotSize = parseFloat(lots);
+      if (lotSize === 0.02) return "Pranav";
+      if (lotSize === 0.04) return "Amit";
+      if (lotSize === 0.1) return "Prateek";
+      if (lotSize === 0.03) return "Devinder";
+      return ""; // Unknown lot size
+    }
+
+    // Calculate Risk:Reward ratio
+    function calculateRiskReward(entryPrice, sl, tp, tradeType) {
+      const entry = parseFloat(entryPrice);
+      const stopLoss = parseFloat(sl);
+      const takeProfit = parseFloat(tp);
+      
+      // Skip calculation if any required value is missing or zero
+      if (!entry || !stopLoss || !takeProfit || entry === 0 || stopLoss === 0 || takeProfit === 0) {
+        return "N/A";
+      }
+      
+      let risk, reward;
+      
+      if (tradeType === "BUY") {
+        // For BUY: Risk = Entry - SL, Reward = TP - Entry
+        risk = entry - stopLoss;
+        reward = takeProfit - entry;
+      } else if (tradeType === "SELL") {
+        // For SELL: Risk = SL - Entry, Reward = Entry - TP
+        risk = stopLoss - entry;
+        reward = entry - takeProfit;
+      } else {
+        return "N/A";
+      }
+      
+      // Avoid division by zero and ensure positive values
+      if (risk <= 0 || reward <= 0) {
+        return "N/A";
+      }
+      
+      const ratio = reward / risk;
+      return "1:" + ratio.toFixed(2);
+    }
+
+    // Determine trade result based on profit
+    function getTradeResult(profit) {
+      const profitValue = parseFloat(profit);
+      if (profitValue > 0) return "WIN";
+      if (profitValue < 0) return "LOSS";
+      return "BREAKEVEN"; // For exactly 0 profit
+    }
+
+    const teamMember = getTeamMember(data.lots);
+    const riskReward = calculateRiskReward(data.entry_price, data.sl, data.tp, data.type);
+    const tradeResult = getTradeResult(data.profit);
 
     // Append CLOSED trade (single row)
     sheet.appendRow([
@@ -50,7 +109,10 @@ function doPost(e) {
   data.broker || "",
   data.account_name || "",
   data.account_number || "",
-  data.position_id || ""
+  data.position_id || "",
+  teamMember,
+  riskReward,
+  tradeResult
 ]);
 
     return ContentService
