@@ -1,5 +1,11 @@
 # Trading Journal MT5 to Google Sheets
 
+## 📞 Contact Information
+### **Mobile:** 8559034400
+### **Email:** prasharpranav@gmail.com
+
+---
+
 Automatically log all your MT5 trades to Google Sheets with this Expert Advisor (EA). Captures complete trade information including entry/exit prices, profit/loss, broker details, and account information.
 
 ## Features
